@@ -1,18 +1,17 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using SolarWindsTask2.Dtos;
 using SolarWindsTask2.Interfaces;
-using SolarWindsTask2.Services;
 
 namespace SolarWindsTask2.Controllers;
 
 [ApiController]
 [Route("api")]
-public class SearchController : ControllerBase
+public class TasksController : ControllerBase
 {
     private readonly ISearchService _search;
     private readonly ITopPairsService _topPairs;
 
-    public SearchController(ISearchService search, ITopPairsService topPairs)
+    public TasksController(ISearchService search, ITopPairsService topPairs)
     {
         _search = search;
         _topPairs = topPairs;
@@ -23,6 +22,6 @@ public class SearchController : ControllerBase
         => Ok(await _search.SearchAsync(term, limit));
 
     [HttpGet("top-pairs")]
-    public async Task<ActionResult<List<TopPairDto>>> TopPairs([FromQuery] int min, [FromQuery] int max, [FromQuery] int? limit)
+    public async Task<ActionResult<List<TopPairDto>>> TopPairs([FromQuery] int? min, [FromQuery] int? max, [FromQuery] int? limit)
         => Ok(await _topPairs.GetTopPairsAsync(min, max, limit));
 }

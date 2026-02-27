@@ -58,7 +58,6 @@ public class RickAndMortyClient : IRickAndMortyClient
             var batch = ids.Skip(i).Take(batchSize).ToList();
             var path = $"character/{string.Join(",", batch)}";
 
-            // API: 1 id => obiekt, wiele => tablica
             if (batch.Count == 1)
             {
                 var one = await GetAsync<CharacterItem>(path);

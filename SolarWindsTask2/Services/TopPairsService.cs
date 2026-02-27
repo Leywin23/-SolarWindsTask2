@@ -1,6 +1,7 @@
 ﻿using SolarWindsTask2.Clients;
 using SolarWindsTask2.Dtos;
 using SolarWindsTask2.Interfaces;
+using SolarWindsTask2.Models;
 
 namespace SolarWindsTask2.Services;
 
@@ -10,12 +11,13 @@ public class TopPairsService : ITopPairsService
 
     public TopPairsService(IRickAndMortyClient rm) => _rm = rm;
 
-    public async Task<List<TopPairDto>> GetTopPairsAsync(int min, int max, int? limit)
+    public async Task<List<TopPairDto>> GetTopPairsAsync(int? min, int? max, int? limit)
     {
-        if (min < 0) throw new ArgumentException("min must be >= 0");
-        if (max < min) throw new ArgumentException("max must be >= min");
+        if (min.HasValue && min.Value < 0) throw new ArgumentException("min must be >= 0");
+        if (max.HasValue && min.HasValue && max.Value < min.Value) throw new ArgumentException("max must be >= min");
 
-        int take = limit is null ? 20 : Math.Max(0, limit.Value);
+        int take = limit ?? 20;
+        if (take < 0) take = 0;
 
         var episodes = await _rm.GetAllEpisodesAsync();
 
@@ -34,12 +36,15 @@ public class TopPairsService : ITopPairsService
         }
 
         var top = pairCounts
-            .Where(kvp => kvp.Value >= min && kvp.Value <= max)
+            .Where(kvp => (!min.HasValue || kvp.Value >= min.Value) && (!max.HasValue || kvp.Value <= max.Value))
             .OrderByDescending(kvp => kvp.Value)
             .ThenBy(kvp => kvp.Key.A)
             .ThenBy(kvp => kvp.Key.B)
             .Take(take)
             .ToList();
+
+        if (!top.Any())
+            return new List<TopPairDto>();
 
         var idsNeeded = top.SelectMany(x => new[] { x.Key.A, x.Key.B }).Distinct().ToList();
         var idToName = await _rm.GetCharacterNamesAsync(idsNeeded);
